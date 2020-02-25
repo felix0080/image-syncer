@@ -4,3 +4,4 @@ records
 *.log
 *.conf
 *.json
+.idea
