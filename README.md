@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/AliyunContainerService/image-syncer.svg?style=svg)](https://circleci.com/gh/AliyunContainerService/image-syncer)
 [![Go Report Card](https://goreportcard.com/badge/github.com/AliyunContainerService/image-syncer)](https://goreportcard.com/report/github.com/AliyunContainerService/image-syncer)
-[![codecov](https://codecov.io/gh/AliyunContainerService/image-syncer/branch/master/graph/badge.svg)](https://codecov.io/gh/AliyunContainerService/image-syncer)
+[![codecov](https://codecov.io/gh/AliyunContainerService/image-syncer/graph/badge.svg)](https://codecov.io/gh/AliyunContainerService/image-syncer)
 
 `image-syncer` is a docker registry tools. With `image-syncer` you can synchronize docker images from some source registries to target registries, which include most popular public docker registry services.
 
@@ -53,7 +53,8 @@ make
     "auth": {               // Authentication fields, each object has a URL as key and a username/password pair as value, 
                             // if authentication object is not provided for a registry, access to the registry will be anonymous.
         
-        "quay.io": {        // This URL of registry should be the same as registry used below in "images fields".
+        "quay.io": {        // This "registry" or "registry/namespace" string should be the same as registry or registry/namespace used below in "images" field.  
+                            // The format of "registry/namespace" will be more prior matched than "registry"
             "username": "xxx",             
             "password": "xxxxxxxxx",
             "insecure": true         // "insecure" field needs to be true if this registry is a http service, default value is false, version of image-syncer need to be later than v1.0.1 to support this field
@@ -65,6 +66,11 @@ make
         "registry.hub.docker.com": {
             "username": "xxx",
             "password": "xxxxxxxxxx"
+        },
+        "quay.io/coreos": {     // "registry/namespace" format is supported after v1.0.3 of image-syncer     
+            "username": "abc",              
+            "password": "xxxxxxxxx",
+            "insecure": true  
         }
     },
     "images": {

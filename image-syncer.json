@@ -5,6 +5,7 @@
             "password": "",
             "insecure": true
         },
+<<<<<<< HEAD
         "localhost:5002": {
             "username": "",
             "password": "",
@@ -15,3 +16,25 @@
         "192.168.99.100:30356/public/mysql:v1": "192.168.99.100:32617/public/mysql:v1"
     }
 }
+=======
+        "registry.cn-beijing.aliyuncs.com": {
+            "username": "xxx",
+            "password": "xxxxxxxxx"
+        },
+        "registry.hub.docker.com": {
+            "username": "xxx",
+            "password": "xxxxxxxxxx"
+        },
+        "quay.io/coreos": {                       
+            "username": "abc",              
+            "password": "xxxxxxxxx",
+            "insecure": true  
+        }
+    },
+    "images": {       
+        "quay.io/coreos/kube-rbac-proxy": "quay.io/ruohe/kube-rbac-proxy",
+        "xxxx":"xxxxx",
+        "xxx/xxx/xx:tag1,tag2,tag3":"xxx/xxx/xx"
+   }                           
+}
+>>>>>>> f2b74e72bcc73afed44a6750283261bd023ffe99
