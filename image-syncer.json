@@ -1,22 +1,17 @@
 {
     "auth": {
-        "quay.io": {                       
-            "username": "xxx",              
-            "password": "xxxxxxxxx",
-            "insecure": true  
+        "localhost:5001": {
+            "username": "",
+            "password": "",
+            "insecure": true
         },
-        "registry.cn-beijing.aliyuncs.com": {
-            "username": "xxx",
-            "password": "xxxxxxxxx"
-        },
-        "registry.hub.docker.com": {
-            "username": "xxx",
-            "password": "xxxxxxxxxx"
+        "localhost:5002": {
+            "username": "",
+            "password": "",
+            "insecure": true
         }
     },
-    "images": {       
-        "quay.io/coreos/kube-rbac-proxy": "quay.io/ruohe/kube-rbac-proxy",
-        "xxxx":"xxxxx",
-        "xxx/xxx/xx:tag1,tag2,tag3":"xxx/xxx/xx"
-   }													 
+    "images": {
+        "192.168.99.100:30356/public/mysql:v1": "192.168.99.100:32617/public/mysql:v1"
+    }
 }

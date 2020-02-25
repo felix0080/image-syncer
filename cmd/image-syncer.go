@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/AliyunContainerService/image-syncer/pkg/client"
+	"image-syncer/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +29,6 @@ var RootCmd = &cobra.Command{
 			fmt.Printf("init sync client error: %v\n", err)
 			return
 		}
-
 		client.Run()
 	},
 }

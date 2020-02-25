@@ -6,8 +6,8 @@ import (
 	"strings"
 	sync2 "sync"
 
-	"github.com/AliyunContainerService/image-syncer/pkg/sync"
-	"github.com/AliyunContainerService/image-syncer/pkg/tools"
+	"image-syncer/pkg/sync"
+	"image-syncer/pkg/tools"
 	"github.com/sirupsen/logrus"
 )
 
@@ -202,7 +202,6 @@ func (c *Client) GenerateSyncTask(source string, destination string) ([]*URLPair
 		if destURL.GetTag() != "" && destURL.GetTag() != sourceURL.GetTag() {
 			return nil, fmt.Errorf("multi-tags source should not correspond to a destination with tag: %s:%s", sourceURL.GetURL(), destURL.GetURL())
 		}
-
 		// contains more than one tag
 		var urlPairs = []*URLPair{}
 		for _, t := range moreTag {
@@ -211,7 +210,6 @@ func (c *Client) GenerateSyncTask(source string, destination string) ([]*URLPair
 				destination: destURL.GetURLWithoutTag() + ":" + t,
 			})
 		}
-
 		return urlPairs, nil
 	}
 
@@ -222,7 +220,7 @@ func (c *Client) GenerateSyncTask(source string, destination string) ([]*URLPair
 		imageSource, err = sync.NewImageSource(sourceURL.GetRegistry(), sourceURL.GetRepoWithNamespace(), sourceURL.GetTag(), auth.Username, auth.Password, auth.Insecure)
 		if err != nil {
 			return nil, fmt.Errorf("generate %s image source error: %v", sourceURL.GetURL(), err)
-		}
+		} 
 	} else {
 		imageSource, err = sync.NewImageSource(sourceURL.GetRegistry(), sourceURL.GetRepoWithNamespace(), sourceURL.GetTag(), "", "", false)
 		if err != nil {

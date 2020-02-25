@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/AliyunContainerService/image-syncer/pkg/tools"
+	"image-syncer/pkg/tools"
 	"github.com/containers/image/docker"
 	"github.com/containers/image/types"
 )
@@ -113,7 +113,7 @@ func (i *ImageSource) GetBlobInfos(manifestByte []byte, manifestType string) ([]
 		srcBlobs = append(srcBlobs, l.BlobInfo)
 	}
 
-	// append config blob info
+	// append config blob info 这个有什么用处？qustion
 	configBlob := manifestInfo.ConfigInfo()
 	if configBlob.Digest != "" {
 		srcBlobs = append(srcBlobs, configBlob)
@@ -124,6 +124,7 @@ func (i *ImageSource) GetBlobInfos(manifestByte []byte, manifestType string) ([]
 
 // GetABlob gets a blob from remote image
 func (i *ImageSource) GetABlob(blobInfo types.BlobInfo) (io.ReadCloser, int64, error) {
+	// why there is -1
 	return i.source.GetBlob(i.ctx, types.BlobInfo{Digest: blobInfo.Digest, Size: -1}, NoCache)
 }
 

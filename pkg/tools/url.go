@@ -19,6 +19,7 @@ type RepoURL struct {
 // NewRepoURL creates a RepoURL
 func NewRepoURL(url string) (*RepoURL, error) {
 	// split to registry/namespace/repoAndTag
+	// todo some time this might be fault
 	slice := strings.SplitN(url, "/", 3)
 
 	var tag, repo string

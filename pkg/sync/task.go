@@ -57,6 +57,7 @@ func (t *Task) Run() error {
 			// pull a blob from source
 			blob, size, err := t.source.GetABlob(b)
 			if err != nil {
+				//查看重试逻辑位置
 				return t.Errorf("Get blob %s(%v) from %s/%s:%s failed: %v", b.Digest, size, t.source.GetRegistry(), t.source.GetRepository(), t.source.GetTag(), err)
 			}
 			t.Infof("Get a blob %s(%v) from %s/%s:%s success", b.Digest, size, t.source.GetRegistry(), t.source.GetRepository(), t.source.GetTag())
@@ -78,6 +79,7 @@ func (t *Task) Run() error {
 	}
 
 	// push manifest to destination
+	//question 为什么要先同步bob再同步manifest
 	if err := t.destination.PushManifest(manifestByte); err != nil {
 		return t.Errorf("Put manifest to %s/%s:%s error: %v", t.destination.GetRegistry(), t.destination.GetRepository(), t.destination.GetTag(), err)
 	}
