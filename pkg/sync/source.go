@@ -36,7 +36,7 @@ func NewImageSource(registry, repository, tag, username, password string, insecu
 	if tag != "" {
 		tagWithColon = ":" + tag
 	}
-
+	fmt.Println("//" + registry + "/" + repository + tagWithColon)
 	srcRef, err := docker.ParseReference("//" + registry + "/" + repository + tagWithColon)
 	if err != nil {
 		return nil, err

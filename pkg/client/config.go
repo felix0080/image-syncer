@@ -14,6 +14,7 @@ type Config struct {
 	// a <source_repo>:<dest_repo> map
 	ImageList map[string]string `json:"images"`
 
+	IsPublic bool `json:"ispublic"`
 	// If the destinate registry and namespace is not provided,
 	// the source image will be synchronized to defaultDestRegistry
 	// and defaultDestNamespace with origin repo name and tag.

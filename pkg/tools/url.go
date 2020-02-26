@@ -16,13 +16,24 @@ type RepoURL struct {
 	tag       string
 }
 
+func NewRepoURLByParm(registry string,namespace string,repo string,label string) *RepoURL  {
+	return &RepoURL{
+		url:       fmt.Sprintf("%s/%s/%s:%s",registry,namespace,repo,label),
+		registry:  registry,
+		namespace: namespace,
+		repo:      repo,
+		tag:       label,
+	}
+}
 // NewRepoURL creates a RepoURL
 func NewRepoURL(url string) (*RepoURL, error) {
 	// split to registry/namespace/repoAndTag
 	// todo some time this might be fault
+	// 暂时先不更改，在处理之后，获取的基本都是符合3个的镜像 但是需要留意一下
 	slice := strings.SplitN(url, "/", 3)
 
 	var tag, repo string
+	//-------提取 镜像名称 tag，tag为空时补充的空字符
 	repoAndTag := slice[len(slice)-1]
 	s := strings.Split(repoAndTag, ":")
 	if len(s) > 2 {
@@ -34,7 +45,7 @@ func NewRepoURL(url string) (*RepoURL, error) {
 		repo = s[0]
 		tag = ""
 	}
-
+	//------------
 	if len(slice) == 3 {
 		return &RepoURL{
 			url:       url,

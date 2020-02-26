@@ -2,9 +2,8 @@ package sync
 
 import (
 	"fmt"
-
-	"github.com/containers/image/pkg/blobinfocache/none"
 	"github.com/sirupsen/logrus"
+	"github.com/containers/image/pkg/blobinfocache/none"
 )
 
 var (
@@ -53,7 +52,7 @@ func (t *Task) Run() error {
 
 	// blob transformation
 	for _, b := range blobInfos {
-		if sizeInRecord, exist := SynchronizedBlobs.Query(t.destination.GetRegistry(), string(b.Digest)); !exist {
+		//if sizeInRecord, exist := SynchronizedBlobs.Query(t.destination.GetRegistry(), string(b.Digest)); !exist {
 			// pull a blob from source
 			blob, size, err := t.source.GetABlob(b)
 			if err != nil {
@@ -72,10 +71,10 @@ func (t *Task) Run() error {
 			if err := SynchronizedBlobs.Record(t.destination.GetRegistry(), string(b.Digest), size); err != nil {
 				t.Infof("Record blobs error: %v, it will slow down you speed", err)
 			}
-		} else {
+		//} else {
 			// print the log of ignored blob
-			t.Infof("Blob %s(%v) has been pushed to %s according to records, will not be pulled", b.Digest, sizeInRecord, t.destination.GetRegistry())
-		}
+			//t.Infof("Blob %s(%v) has been pushed to %s according to records, will not be pulled", b.Digest, sizeInRecord, t.destination.GetRegistry())
+		//}
 	}
 
 	// push manifest to destination

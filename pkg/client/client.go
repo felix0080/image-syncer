@@ -3,6 +3,8 @@ package client
 import (
 	"container/list"
 	"fmt"
+	"image-syncer/pkg/object"
+	"regexp"
 	"strings"
 	sync2 "sync"
 
@@ -41,7 +43,7 @@ type URLPair struct {
 	source      string
 	destination string
 }
-
+var Clients *Client
 // NewSyncClient creates a synchronization client
 func NewSyncClient(configFile, logFile, recordsFile string, routineNum, retries int, defaultDestRegistry string, defaultDestNamespace string) (*Client, error) {
 	logger := NewFileLogger(logFile)
@@ -55,8 +57,7 @@ func NewSyncClient(configFile, logFile, recordsFile string, routineNum, retries 
 	if err := sync.NewSynchronizedBlobRecorder(recordsFile); err != nil {
 		return nil, err
 	}
-
-	return &Client{
+	c:=&Client{
 		taskList:                   list.New(),
 		urlPairList:                list.New(),
 		failedTaskList:             list.New(),
@@ -69,7 +70,11 @@ func NewSyncClient(configFile, logFile, recordsFile string, routineNum, retries 
 		urlPairListChan:            make(chan int, 1),
 		failedTaskListChan:         make(chan int, 1),
 		failedTaskGenerateListChan: make(chan int, 1),
-	}, nil
+	}
+	if Clients == nil {
+		Clients = c
+	}
+	return c, nil
 }
 
 // Run is main function of a synchronization client
@@ -173,6 +178,7 @@ func (c *Client) Run() {
 
 // GenerateSyncTask creates synchronization tasks from source and destination url, return URLPair array if there are more than one tags
 func (c *Client) GenerateSyncTask(source string, destination string) ([]*URLPair, error) {
+	fmt.Println(fmt.Sprintf("生成sync task %s %s",source,destination))
 	if source == "" {
 		return nil, fmt.Errorf("source url should not be empty")
 	}
@@ -183,13 +189,14 @@ func (c *Client) GenerateSyncTask(source string, destination string) ([]*URLPair
 	}
 
 	// if dest is not specific, use default registry and namespace
-	if destination == "" {
+	// 不考虑 dest 为空的情况
+	/*if destination == "" {
 		if c.config.defaultDestRegistry != "" && c.config.defaultDestNamespace != "" {
 			destination = c.config.defaultDestRegistry + "/" + c.config.defaultDestNamespace + "/" + sourceURL.GetRepoWithTag()
 		} else {
 			return nil, fmt.Errorf("the default registry and namespace should not be nil if you want to use them")
 		}
-	}
+	}*/
 
 	destURL, err := tools.NewRepoURL(destination)
 	if err != nil {
@@ -278,7 +285,102 @@ func (c *Client) GenerateSyncTask(source string, destination string) ([]*URLPair
 	c.logger.Infof("Generate a task for %s to %s", sourceURL.GetURL(), destURL.GetURL())
 	return nil, nil
 }
+func RepWords(str string) string {
+	reg := regexp.MustCompile(`[^\da-z]`)
+	return reg.ReplaceAllString(str, "-")
+}
+func (c *Client) RepliceNamespace(namespace string,tagName string) string {
+	namespace=strings.ToLower(namespace)
+	namespace=RepWords(namespace)
+	namespace="ap-"+namespace
 
+	if c.config.IsPublic{
+		if strings.Contains(tagName,"train"){
+			namespace=namespace+"-train"
+		}else{
+			namespace=namespace+"-release"
+		}
+	}
+	return namespace
+}
+
+func (c *Client) RepliceImage(image string,registry string) string {
+	if strings.Contains(registry, "csapdev") {
+		return fmt.Sprintf("%s-%s",image,"dev")
+	}
+	if strings.Contains(registry, "csapst") ||strings.Contains(registry, "csapsit") {
+		return fmt.Sprintf("%s-%s",image,"st")
+	}
+	if strings.Contains(registry, "csapuat") {
+		return fmt.Sprintf("%s-%s",image,"uat")
+	}
+	return image
+}
+func (c *Client) CheckIfExist(source object.Param)(bool,error) {
+	sourceURL := tools.NewRepoURLByParm(c.config.defaultDestRegistry,c.RepliceNamespace(source.SysCode,source.Label),c.RepliceImage(source.RepoName,source.RegistryAddr),source.Label)
+	//var imageSource *sync.ImageSource
+	var err error
+	if auth, exist := c.config.GetAuth(sourceURL.GetRegistry(), sourceURL.GetNamespace()); exist {
+		c.logger.Infof("Find auth information for %v, username: %v", sourceURL.GetURL(), auth.Username)
+		_, err = sync.NewImageSource(sourceURL.GetRegistry(), sourceURL.GetRepoWithNamespace(), sourceURL.GetTag(), auth.Username, auth.Password, auth.Insecure)
+		if err != nil {
+			return false, fmt.Errorf("generate %s image source error: %v", sourceURL.GetURL(), err)
+		}
+	} else {
+		c.logger.Infof("Cannot find auth information for %v, pull actions will be anonymous", sourceURL.GetURL())
+		_, err = sync.NewImageSource(sourceURL.GetRegistry(), sourceURL.GetRepoWithNamespace(), sourceURL.GetTag(), "", "", false)
+		if err != nil {
+			return false, fmt.Errorf("generate %s image source error: %v", sourceURL.GetURL(), err)
+		}
+	}
+	return true,nil
+}
+// GenerateSyncTask creates synchronization tasks from source and destination url, return URLPair array if there are more than one tags
+func (c *Client) GenerateSyncTaskSync(source object.Param) (*sync.Task,error) {
+	fmt.Println(fmt.Sprintf("生成sync task %s %s",source))
+	sourceURL := tools.NewRepoURLByParm(source.RegistryAddr,source.Namespace,source.RepoName,source.Label)
+
+	destURL := tools.NewRepoURLByParm(c.config.defaultDestRegistry,c.RepliceNamespace(source.SysCode,source.Label),c.RepliceImage(source.RepoName,source.RegistryAddr),source.Label)
+
+	var imageSource *sync.ImageSource
+	var imageDestination *sync.ImageDestination
+	var err error
+	if auth, exist := c.config.GetAuth(sourceURL.GetRegistry(), sourceURL.GetNamespace()); exist {
+		c.logger.Infof("Find auth information for %v, username: %v", sourceURL.GetURL(), auth.Username)
+		imageSource, err = sync.NewImageSource(sourceURL.GetRegistry(), sourceURL.GetRepoWithNamespace(), sourceURL.GetTag(), auth.Username, auth.Password, auth.Insecure)
+		if err != nil {
+			return nil, fmt.Errorf("generate %s image source error: %v", sourceURL.GetURL(), err)
+		}
+	} else {
+		c.logger.Infof("Cannot find auth information for %v, pull actions will be anonymous", sourceURL.GetURL())
+		imageSource, err = sync.NewImageSource(sourceURL.GetRegistry(), sourceURL.GetRepoWithNamespace(), sourceURL.GetTag(), "", "", false)
+		if err != nil {
+			return nil, fmt.Errorf("generate %s image source error: %v", sourceURL.GetURL(), err)
+		}
+	}
+
+	// if source tag is set but without destinate tag, use the same tag as source
+	destTag := destURL.GetTag()
+	if destTag == "" {
+		destTag = sourceURL.GetTag()
+	}
+
+	if auth, exist := c.config.GetAuth(destURL.GetRegistry(), destURL.GetNamespace()); exist {
+		c.logger.Infof("Find auth information for %v, username: %v", destURL.GetURL(), auth.Username)
+		imageDestination, err = sync.NewImageDestination(destURL.GetRegistry(), destURL.GetRepoWithNamespace(), destTag, auth.Username, auth.Password, auth.Insecure)
+		if err != nil {
+			return nil, fmt.Errorf("generate %s image destination error: %v", sourceURL.GetURL(), err)
+		}
+	} else {
+		c.logger.Infof("Cannot find auth information for %v, push actions will be anonymous", destURL.GetURL())
+		imageDestination, err = sync.NewImageDestination(destURL.GetRegistry(), destURL.GetRepoWithNamespace(), destTag, "", "", false)
+		if err != nil {
+			return nil, fmt.Errorf("generate %s image destination error: %v", destURL.GetURL(), err)
+		}
+	}
+	c.logger.Infof("Generate a task for %s to %s", sourceURL.GetURL(), destURL.GetURL())
+	return sync.NewTask(imageSource, imageDestination, c.logger),nil
+}
 // GetATask return a sync.Task struct if the task list is not empty
 func (c *Client) GetATask() (*sync.Task, bool) {
 	c.taskListChan <- 1
